@@ -1,7 +1,8 @@
 import { CreateCarDto } from './dto/create-car.dto';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Car } from './interfaces/car.interface';
 import { v4 as uuid } from 'uuid';
+import { UpdateCarDto } from './dto';
 
 @Injectable()
 export class CarsService {
@@ -58,5 +59,37 @@ export class CarsService {
         }
         this.cars.push(car)
         return car
+    }
+
+    update(id: string, updateCarDto: UpdateCarDto){
+
+        let carDB = this.findOneById(id)
+
+        if( updateCarDto.id && updateCarDto.id !== id)
+            throw new BadRequestException(`Car id ${id} is not valid inside body, already exists in database`)
+
+        this.cars = this.cars.map(car => {
+            if(car.id === id){
+                carDB = {
+                    ...carDB,
+                    ...updateCarDto,
+                    id,
+                }
+                return carDB
+            }
+            return car
+        })
+
+        return carDB; //car actually updates
+    }
+
+    delete(id: string){
+
+        this.findOneById(id)
+        this.cars = this.cars.filter( car => car.id !== id)        
+
+        return {
+            message: `The item "${id}" has been deleted.`
+        }
     }
 }
